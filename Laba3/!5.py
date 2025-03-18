@@ -1,6 +1,4 @@
 import math
-from multiprocessing.reduction import send_handle
-
 
 #Степень сжатия
 def compression_ratio(uncompressed_data : str, compressed_data : str) -> float:
@@ -62,42 +60,44 @@ def arithmetic_code(data : str, symbolchance : list) -> str:
         cnt+=1
 
     result = int(end*10**cnt-number+1)/(10**cnt)
-    print(schennon_entropy(symbolchance,len(data)))
-    return frac_to_binfrac(result,schennon_entropy(symbolchance,len(data)))[2:]
+    #tmp = schennon_entropy(symbolchance,len(data))
+    return frac_to_binfrac(result)[2:]
 
-def arithmetic_decode(data : str, symbolchance : list) -> str:
+def arithmetic_decode(data: str, symbolchance: list) -> str:
     data = "0." + data
     data = binfrac_to_dec(data)
 
-    flag = True
+    res = ""
 
     start = 0
     end = 1
 
-    res = ""
-    while(flag):
+    while(True):
         segments = list()
         for j in symbolchance:
             segments.append(start + (end - start) * j[1] + (segments[-1] - start if len(segments) != 0 else 0))
-        #print(segments)
 
+        maxind = -1
         minind = -1
-        maxind = 0
+
         for i in range(len(segments)):
             if data > segments[i]:
-                minind = i-1
+                minind = i
             if data < segments[i]:
                 maxind = i
                 break
 
-        if start == segments[minind] and end == segments[maxind]:
+
+        if symbolchance[maxind][0] == '!':
             break
-        res += symbolchance[minind+1][0]
-        if minind != -1 :
+        res += symbolchance[maxind][0]
+
+        if minind == -1:
+            start = start
+        else:
             start = segments[minind]
         end = segments[maxind]
 
-        #print(data,start,end)
 
     return res
 
@@ -105,28 +105,45 @@ def main():
     data = "acefdb"
     symbolchance = [['a',0.1],['b',0.15],['c',0.05],['d',0.5],['e',0.1],['f',0.1]]
 
-    #не роботоет
     data += '!'
+    weight = 0.0051#0.05 base not stonks
     for i in symbolchance:
-        i[1] = i[1]*(1-1/len(data))
-    symbolchance.append(['!',1/len(data)])
+        i[1] *= (1 - weight)
+    symbolchance.append(['!', weight])
 
-
-    #symbolchance = { 'a' : 0.1, 'b' : 0.15 , 'c' : 0.05, 'd' : 0.5, 'e' : 0.1, 'f' : 0.1}
     arithmetic = arithmetic_code(data,symbolchance)
-    print("Исходная строка:",data)
+    print("Исходная строка:",data[:-1])
     print("Закодированная строка",arithmetic)
     print("Декодированная строка",arithmetic_decode(arithmetic,symbolchance))
     print("Коэффициент сжатия:", compression_ratio(data*int(math.log2(len(symbolchance))+1), arithmetic))
     print("степень сжатия:", compression_factor(data*int(math.log2(len(symbolchance))+1), arithmetic))
-    print(symbolchance)
+
+def test():
+    arr = list()
+    for iweight in range(1,10000-10):
+
+        data = "acefdb"
+        symbolchance = [['a', 0.1], ['b', 0.15], ['c', 0.05], ['d', 0.5], ['e', 0.1], ['f', 0.1]]
+
+        data += '!'
+        weight = iweight/10000
+        #print(weight)
+        for i in symbolchance:
+            i[1] *= (1 - weight)
+        symbolchance.append(['!', weight])
+
+        arithmetic = arithmetic_code(data, symbolchance)
+
+
+        if(arithmetic_decode(arithmetic,symbolchance) == data[:-1]):
+            arr.append([weight,len(arithmetic)])
+    print(arr)
+        # print("Исходная строка:", data[:-1])
+        # print("Закодированная строка", arithmetic)
+        # print("Декодированная строка", arithmetic_decode(arithmetic, symbolchance))
+        # print("Коэффициент сжатия:", compression_ratio(data * int(math.log2(len(symbolchance)) + 1), arithmetic))
+        # print("степень сжатия:", compression_factor(data * int(math.log2(len(symbolchance)) + 1), arithmetic))
+
 if __name__ == "__main__":
     main()
-
-
-#
-#!decode
-#!
-#
-#
-#
+    #test()
