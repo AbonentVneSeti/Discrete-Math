@@ -1,13 +1,11 @@
 import numpy as np
 from collections import deque
 
-
 class Edge:
     def __init__(self, to, rev, capacity):
         self.to = to
         self.rev = rev
         self.capacity = capacity
-
 
 class MaxFlow:
     def __init__(self, N):
@@ -74,7 +72,6 @@ class MaxFlow:
                     visited[edge.to] = True
                     q.append(edge.to)
         return visited
-
 
 def solve_problem(adj_matrix, description):
     print(f"\n{description}")
